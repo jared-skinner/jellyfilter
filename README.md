@@ -121,25 +121,50 @@ dotnet test
 ### From the dashboard
 
 Jellyfin installs plugins from repositories rather than from uploaded files, so this route means
-publishing two files — a zip of the plugin and a `manifest.json` describing it — somewhere the
-server can reach over HTTP. `scripts/package.sh` produces both:
+publishing two things the server can reach over HTTP: a zip of the plugin, and a `manifest.json`
+pointing at it. `scripts/package.sh` produces both.
 
 ```sh
-BASE_URL=https://example.com/jellyfin scripts/package.sh
+scripts/package.sh
 ```
 
-`BASE_URL` is the directory the zip will be served from; it is baked into the manifest as the
-download URL, which is why it has to be known when packaging. The script writes
-`artifacts/jellyfilter_<version>.zip` and `artifacts/manifest.json`, and prints the URL it expects
-the zip to end up at.
+It writes `artifacts/jellyfilter_<version>.zip` and a `manifest.json` at the repository root, then
+prints the three steps to publish them. The manifest is at the root rather than in `artifacts/`
+because it is the file Jellyfin polls, so it needs to be committed and served, whereas the zip is a
+release attachment.
 
-Publish both files, then in **Dashboard → Plugins → Repositories** add a repository whose URL is
-the published `manifest.json`. JellyFilter then appears in the catalogue under *General*, and
-installs and updates like any other plugin.
+By default the manifest points at a GitHub release of `REPO_URL` tagged `v<version>`. So the flow is:
 
-For a GitHub-hosted copy, attach the zip to a release and point `BASE_URL` at that release's
-download directory, then serve `manifest.json` from the raw file URL. For a home server, any static
-file host on the same network works — the Jellyfin server is the only thing that needs to reach it.
+1. Attach `artifacts/jellyfilter_<version>.zip` to a release tagged `v<version>`.
+2. Commit and push `manifest.json`.
+3. In **Dashboard → Plugins → Repositories**, add the manifest's raw URL, for example
+   `https://raw.githubusercontent.com/<you>/jellyfilter/main/manifest.json`.
+
+JellyFilter then appears in the catalogue under *General* and installs and updates like any other
+plugin.
+
+To host somewhere other than GitHub, set `BASE_URL` to the directory URL the zip will be served
+from. Any static file host the Jellyfin server can reach will do:
+
+```sh
+BASE_URL=http://192.168.1.50:8080 scripts/package.sh
+```
+
+The manifest carries the zip's MD5, so the two files have to be published as a pair. The build is
+deterministic and the archive timestamp is pinned, which means re-running the script produces a
+byte-identical zip and will not invalidate an already published manifest.
+
+### Publishing an update
+
+Bump `AssemblyVersion` and `FileVersion` in the csproj, then re-run with a matching version:
+
+```sh
+VERSION=1.1.0.0 CHANGELOG="What changed." scripts/package.sh
+```
+
+The manifest it writes carries a single version entry, which is all Jellyfin needs to offer an
+install or an update. The longer version lists in published manifests exist only so users can pin
+to a specific release.
 
 ### By hand
 

@@ -1,0 +1,20 @@
+[
+    {
+        "guid": "9d4bf1d9-ad64-4006-8ecb-d285d826352d",
+        "name": "JellyFilter",
+        "owner": "jared",
+        "category": "General",
+        "overview": "Skip or mute scenes listed in a JSON file stored alongside the video.",
+        "description": "Reads a sidecar JSON file listing scenes by content type and timestamp, and skips or mutes those scenes during playback according to each user's content preferences.",
+        "versions": [
+            {
+                "version": "1.0.0.0",
+                "changelog": "Initial release.",
+                "targetAbi": "10.11.0.0",
+                "sourceUrl": "https://github.com/jared-skinner/jellyfilter/releases/download/v1.0.0.0/jellyfilter_1.0.0.0.zip",
+                "checksum": "3dae839d8cba4b0bbf0c9e3aae68d347",
+                "timestamp": "2026-09-27T19:46:39Z"
+            }
+        ]
+    }
+]
