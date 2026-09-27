@@ -1,9 +1,9 @@
 ---
 name: "JellyFilter"
 guid: "9d4bf1d9-ad64-4006-8ecb-d285d826352d"
-version: "1.0.0.0"
-targetAbi: "10.11.0.0"
-framework: "net9.0"
+version: "1.1.0.0"
+targetAbi: "12.1.0.0"
+framework: "net10.0"
 owner: "jared"
 overview: "Skip or mute scenes listed in a JSON file stored alongside the video."
 description: >

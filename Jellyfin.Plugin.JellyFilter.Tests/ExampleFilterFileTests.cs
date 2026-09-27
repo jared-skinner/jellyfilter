@@ -8,6 +8,28 @@ namespace Jellyfin.Plugin.JellyFilter.Tests;
 /// </summary>
 public class ExampleFilterFileTests
 {
+    public static TheoryData<string> ExampleFiles()
+    {
+        var data = new TheoryData<string>();
+        foreach (var path in Directory.GetFiles(Path.Combine(AppContext.BaseDirectory, "examples"), "*.json"))
+        {
+            data.Add(Path.GetFileName(path));
+        }
+
+        return data;
+    }
+
+    [Theory]
+    [MemberData(nameof(ExampleFiles))]
+    public void Every_shipped_example_parses_without_warnings(string fileName)
+    {
+        var path = Path.Combine(AppContext.BaseDirectory, "examples", fileName);
+        var filter = FilterFileParser.Parse(File.ReadAllText(path), path);
+
+        Assert.Empty(filter.Warnings);
+        Assert.True(filter.HasScenes);
+    }
+
     [Fact]
     public void The_shipped_example_parses_cleanly()
     {

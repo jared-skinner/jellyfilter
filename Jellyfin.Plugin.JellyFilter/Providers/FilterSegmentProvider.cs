@@ -73,6 +73,23 @@ public class FilterSegmentProvider(ILibraryManager libraryManager, FilterFileRep
     }
 
     /// <inheritdoc />
+    /// <remarks>
+    /// Jellyfin calls this when an item is removed so providers can discard anything they derived
+    /// from it. The only state here is the parsed copy of the filter file held in memory — the
+    /// file itself belongs to the user and is deliberately left alone.
+    /// </remarks>
+    public Task CleanupExtractedData(Guid itemId, CancellationToken cancellationToken)
+    {
+        var item = _libraryManager.GetItemById(itemId);
+        if (item is not null)
+        {
+            _repository.Invalidate(item.Path);
+        }
+
+        return Task.CompletedTask;
+    }
+
+    /// <inheritdoc />
     public ValueTask<bool> Supports(BaseItem item) =>
         ValueTask.FromResult(item is Video && !string.IsNullOrEmpty(item.Path));
 }

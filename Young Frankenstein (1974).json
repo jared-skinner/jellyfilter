@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "title": "Young Frankenstein (1974)",
+  "scenes": [
+    {
+      "type": "violence",
+      "start": 302,
+      "end": 331,
+      "severity": "moderate",
+      "description": "fight in the alley"
+    },
+    {
+      "type": "sexuality",
+      "start": 1244,
+      "end": 1345
+    },
+    {
+      "type": "profanity",
+      "start": "00:31:02.5",
+      "end": "00:31:04",
+      "action": "mute",
+      "severity": "mild",
+      "description": "one word"
+    },
+    {
+      "type": "gore",
+      "start": "01:42:10",
+      "end": "01:43:05"
+    }
+  ]
+}

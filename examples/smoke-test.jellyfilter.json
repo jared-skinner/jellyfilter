@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "title": "JellyFilter smoke test",
+  "scenes": [
+    {
+      "type": "violence",
+      "start": 30,
+      "end": 60,
+      "description": "Playback should jump from 0:30 to 1:00."
+    },
+    {
+      "type": "profanity",
+      "start": 90,
+      "end": 105,
+      "action": "mute",
+      "description": "Audio should cut out from 1:30 to 1:45, then come back."
+    }
+  ]
+}

@@ -108,8 +108,13 @@ not segments are enabled.
 
 ## Building
 
-Requires the .NET 9 SDK. Targets Jellyfin 10.11 — the server refuses plugins built against a newer
-ABI than it runs, so on 10.10 this will not appear in the plugin list.
+Requires the .NET 10 SDK. Targets Jellyfin 12.1.
+
+The target matters: a plugin is compiled against the server's own assemblies, so one built for a
+different major version will show as **NotSupported** in the plugin list and never load — which
+also means no settings page and no API endpoints. To build for a different server, change both the
+`TargetFramework` and the `Jellyfin.Controller` / `Jellyfin.Model` versions in the csproj together.
+Jellyfin 10.11 pairs with `net9.0`, Jellyfin 12.x with `net10.0`.
 
 ```sh
 dotnet build -c Release
@@ -168,7 +173,7 @@ to a specific release.
 
 ### By hand
 
-Copy `Jellyfin.Plugin.JellyFilter/bin/Release/net9.0/Jellyfin.Plugin.JellyFilter.dll` into a
+Copy `Jellyfin.Plugin.JellyFilter/bin/Release/net10.0/Jellyfin.Plugin.JellyFilter.dll` into a
 `plugins/JellyFilter/` folder inside your Jellyfin data directory, make sure the server's user can
 read it, and restart. The configuration page is embedded in the DLL, so there is nothing else to
 copy.

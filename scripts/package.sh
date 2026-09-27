@@ -14,8 +14,21 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
-VERSION="${VERSION:-1.0.0.0}"
-TARGET_ABI="${TARGET_ABI:-10.11.0.0}"
+CSPROJ="Jellyfin.Plugin.JellyFilter/Jellyfin.Plugin.JellyFilter.csproj"
+
+read_csproj() {
+    sed -n "s:.*<$1>\(.*\)</$1>.*:\1:p" "$CSPROJ" | head -n 1
+}
+
+# Derived from the project file so that the manifest, the archive name and the built DLL can
+# never disagree about which version or which Jellyfin this is for.
+VERSION="${VERSION:-$(read_csproj AssemblyVersion)}"
+TFM="$(read_csproj TargetFramework)"
+
+# "12.1.*" in the package reference means the plugin runs on Jellyfin 12.1.
+JELLYFIN_VERSION="$(sed -n 's:.*Jellyfin.Controller" Version="\([0-9]*\.[0-9]*\)\..*:\1:p' "$CSPROJ" | head -n 1)"
+TARGET_ABI="${TARGET_ABI:-${JELLYFIN_VERSION}.0.0}"
+
 OWNER="${OWNER:-jared}"
 CHANGELOG="${CHANGELOG:-Initial release.}"
 REPO_URL="${REPO_URL:-https://github.com/jared-skinner/jellyfilter}"
@@ -60,7 +73,7 @@ find_dotnet() {
 
 if ! DOTNET="$(find_dotnet)"; then
     echo "No .NET SDK found." >&2
-    echo "Install one with:  curl -sSL https://dot.net/v1/dotnet-install.sh | bash -s -- --channel 9.0" >&2
+    echo "Install one with:  curl -sSL https://dot.net/v1/dotnet-install.sh | bash -s -- --channel 10.0" >&2
     echo "or set DOTNET_ROOT to an existing installation." >&2
     exit 1
 fi
@@ -77,7 +90,7 @@ mkdir -p "$STAGE_DIR"
 
 "$DOTNET" build -c Release Jellyfin.Plugin.JellyFilter/Jellyfin.Plugin.JellyFilter.csproj
 
-cp Jellyfin.Plugin.JellyFilter/bin/Release/net9.0/Jellyfin.Plugin.JellyFilter.dll "$STAGE_DIR/"
+cp "Jellyfin.Plugin.JellyFilter/bin/Release/${TFM}/Jellyfin.Plugin.JellyFilter.dll" "$STAGE_DIR/"
 
 # The compiler output is deterministic, so pinning the archive's timestamp makes the whole zip
 # reproducible. That matters because the manifest carries the zip's checksum: without this, simply
