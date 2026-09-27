@@ -205,6 +205,12 @@
                 return ApiClient.ajax(request);
             }
 
+            // ApiClient resolves with an already-parsed object when dataType is 'json', but with a
+            // raw Response otherwise. Accept either so the caller does not have to care.
+            function body(response) {
+                return response && typeof response.json === 'function' ? response.json() : response;
+            }
+
             function currentUser() {
                 var id = page.querySelector('#UserSelect').value;
                 for (var i = 0; i < users.length; i++) {
@@ -244,7 +250,7 @@
             function loadUsers() {
                 return Promise.all([api('GET', 'JellyFilter/Users'), api('GET', 'JellyFilter/Categories')])
                     .then(function (results) {
-                        return Promise.all([results[0].json(), results[1].json()]);
+                        return Promise.all([body(results[0]), body(results[1])]);
                     })
                     .then(function (parsed) {
                         users = parsed[0];
@@ -366,7 +372,7 @@
                 }
 
                 api('GET', 'JellyFilter/Items/' + match[0] + '/Filter')
-                    .then(function (response) { return response.json(); })
+                    .then(body)
                     .then(function (result) {
                         output.textContent = JSON.stringify(result, null, 2);
                     })
