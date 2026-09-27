@@ -1,7 +1,7 @@
 ---
 name: "JellyFilter"
 guid: "9d4bf1d9-ad64-4006-8ecb-d285d826352d"
-version: "1.1.0.0"
+version: "1.1.1.0"
 targetAbi: "12.1.0.0"
 framework: "net10.0"
 owner: "jared"

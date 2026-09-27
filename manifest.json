@@ -8,12 +8,12 @@
         "description": "Reads a sidecar JSON file listing scenes by content type and timestamp, and skips or mutes those scenes during playback according to each user's content preferences.",
         "versions": [
             {
-                "version": "1.1.0.0",
-                "changelog": "Retarget to Jellyfin 12.1.",
+                "version": "1.1.1.0",
+                "changelog": "Report the real error when inspecting an item, and accept a pasted item URL.",
                 "targetAbi": "12.1.0.0",
-                "sourceUrl": "https://github.com/jared-skinner/jellyfilter/releases/download/v1.1.0.0/jellyfilter_1.1.0.0.zip",
-                "checksum": "07a2ee1c8bd3557b41d2dc76c2343785",
-                "timestamp": "2026-09-27T20:10:48Z"
+                "sourceUrl": "https://github.com/jared-skinner/jellyfilter/releases/download/v1.1.1.0/jellyfilter_1.1.1.0.zip",
+                "checksum": "1c9f63ba3b2ce9b694fa23c4c85814d5",
+                "timestamp": "2026-09-27T20:20:33Z"
             }
         ]
     }

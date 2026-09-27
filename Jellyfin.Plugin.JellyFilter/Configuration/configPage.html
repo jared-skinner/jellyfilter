@@ -161,11 +161,12 @@
             <br />
             <h2>Troubleshooting</h2>
             <div class="inputContainer">
-                <label class="inputLabel inputLabelUnfocused" for="ItemId">Library item id</label>
-                <input is="emby-input" type="text" id="ItemId" placeholder="paste an item id from its URL" />
+                <label class="inputLabel inputLabelUnfocused" for="ItemId">Library item</label>
+                <input is="emby-input" type="text" id="ItemId" placeholder="paste the item's URL, or just its id" />
                 <div class="fieldDescription">
-                    Shows which filter file was found for an item, which paths were searched, and any lines that
-                    could not be read.
+                    Open the movie or episode in Jellyfin and paste its URL here — the id will be picked out of
+                    it. Shows which filter file was found, which paths were searched, and any entries that could
+                    not be read.
                 </div>
             </div>
             <div>
@@ -353,13 +354,34 @@
                     return;
                 }
 
-                api('GET', 'JellyFilter/Items/' + itemId + '/Filter')
+                // The id is easiest to get by copying the whole URL of the item's page, so accept
+                // that as well as a bare id rather than making it the user's job to extract it.
+                var match = /[0-9a-f]{8}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{12}/i.exec(itemId);
+                if (!match) {
+                    output.textContent = 'That does not look like an item id.\n\n' +
+                        'Open the item in Jellyfin and copy the id from its URL, which looks like:\n' +
+                        '  .../web/#/details?id=4b8b1a0e3f5c4d2e9a7b6c5d4e3f2a1b\n\n' +
+                        'You can paste the whole URL here.';
+                    return;
+                }
+
+                api('GET', 'JellyFilter/Items/' + match[0] + '/Filter')
                     .then(function (response) { return response.json(); })
                     .then(function (result) {
                         output.textContent = JSON.stringify(result, null, 2);
                     })
-                    .catch(function () {
-                        output.textContent = 'No library item with that id.';
+                    .catch(function (error) {
+                        var status = (error && error.status) || 0;
+                        if (status === 404) {
+                            output.textContent = 'The server has no library item with id ' + match[0] + '.';
+                        } else if (status === 401 || status === 403) {
+                            output.textContent = 'Not authorised (HTTP ' + status + '). ' +
+                                'This page requires an administrator account.';
+                        } else {
+                            output.textContent = 'The request failed' +
+                                (status ? ' with HTTP ' + status : '') +
+                                '. Check the server log for details.';
+                        }
                     });
             }
 
