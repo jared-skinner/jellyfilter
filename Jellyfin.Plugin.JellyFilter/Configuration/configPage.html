@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>JellyFilter</title>
+</head>
+<body>
+<div id="JellyFilterConfigPage" data-role="page" class="page type-interior pluginConfigurationPage">
+    <div data-role="content">
+        <div class="content-primary">
+
+            <form id="JellyFilterGlobalForm">
+                <h2>Playback filtering</h2>
+
+                <div class="checkboxContainer checkboxContainer-withDescription">
+                    <label class="emby-checkbox-label">
+                        <input is="emby-checkbox" type="checkbox" id="EnableAutoSkip" />
+                        <span>Filter during playback</span>
+                    </label>
+                    <div class="fieldDescription checkboxFieldDescription">
+                        The server watches each playing session and seeks past or mutes filtered scenes.
+                        This works on every client and is the only mechanism that can tell users apart.
+                    </div>
+                </div>
+
+                <div class="inputContainer">
+                    <label class="inputLabel inputLabelUnfocused" for="PollIntervalMs">Check interval (ms)</label>
+                    <input is="emby-input" type="number" id="PollIntervalMs" min="100" max="5000" step="50" />
+                    <div class="fieldDescription">
+                        How often playback positions are checked. Lower values start the skip closer to the
+                        beginning of a scene at the cost of more polling.
+                    </div>
+                </div>
+
+                <div class="inputContainer">
+                    <label class="inputLabel inputLabelUnfocused" for="SkipPaddingSeconds">Skip padding (seconds)</label>
+                    <input is="emby-input" type="number" id="SkipPaddingSeconds" min="0" max="10" step="0.1" />
+                    <div class="fieldDescription">
+                        How far past the end of a scene playback resumes. A little padding stops a slow client
+                        from landing back inside the scene it just left.
+                    </div>
+                </div>
+
+                <div class="inputContainer">
+                    <label class="inputLabel inputLabelUnfocused" for="MinimumSceneSeconds">Shortest scene to act on (seconds)</label>
+                    <input is="emby-input" type="number" id="MinimumSceneSeconds" min="0" max="60" step="0.1" />
+                    <div class="fieldDescription">
+                        Scenes shorter than this are left alone, because seeking would be more disruptive than
+                        the content.
+                    </div>
+                </div>
+
+                <div class="checkboxContainer checkboxContainer-withDescription">
+                    <label class="emby-checkbox-label">
+                        <input is="emby-checkbox" type="checkbox" id="ShowSkipNotification" />
+                        <span>Show a message when a scene is skipped</span>
+                    </label>
+                </div>
+
+                <div class="inputContainer">
+                    <label class="inputLabel inputLabelUnfocused" for="SkipNotificationFormat">Message text</label>
+                    <input is="emby-input" type="text" id="SkipNotificationFormat" />
+                    <div class="fieldDescription"><code>{category}</code> is replaced with the scene's category.</div>
+                </div>
+
+                <h2>Filter files</h2>
+
+                <div class="inputContainer">
+                    <label class="inputLabel inputLabelUnfocused" for="FilterFileNamePatterns">Filenames to look for</label>
+                    <textarea is="emby-textarea" id="FilterFileNamePatterns" rows="5"></textarea>
+                    <div class="fieldDescription">
+                        One pattern per line, searched in order next to the video file.
+                        <code>{name}</code> becomes the video filename without its extension and
+                        <code>{filename}</code> becomes the full filename.
+                    </div>
+                </div>
+
+                <div class="inputContainer">
+                    <label class="inputLabel inputLabelUnfocused" for="ExternalFilterDirectory">Additional filter directory</label>
+                    <input is="emby-input" type="text" id="ExternalFilterDirectory" />
+                    <div class="fieldDescription">
+                        Optional. Searched after the video's own folder, for libraries mounted read-only.
+                    </div>
+                </div>
+
+                <h2>Media segments</h2>
+
+                <div class="checkboxContainer checkboxContainer-withDescription">
+                    <label class="emby-checkbox-label">
+                        <input is="emby-checkbox" type="checkbox" id="EnableMediaSegments" />
+                        <span>Also publish scenes as media segments</span>
+                    </label>
+                    <div class="fieldDescription checkboxFieldDescription">
+                        Lets clients that understand media segments offer their own skip button. Segments belong
+                        to an item rather than a viewer, so every scene published this way is visible to everyone
+                        on the server regardless of their preferences below.
+                    </div>
+                </div>
+
+                <div class="selectContainer">
+                    <label class="selectLabel" for="PublishedSegmentType">Publish scenes as</label>
+                    <select is="emby-select" id="PublishedSegmentType">
+                        <option value="Commercial">Commercial</option>
+                        <option value="Preview">Preview</option>
+                        <option value="Recap">Recap</option>
+                        <option value="Outro">Outro</option>
+                        <option value="Intro">Intro</option>
+                        <option value="Unknown">Unknown</option>
+                    </select>
+                    <div class="fieldDescription">
+                        Jellyfin's segment vocabulary has no entry for content warnings, so scenes have to borrow
+                        one of the existing types.
+                    </div>
+                </div>
+
+                <div>
+                    <button is="emby-button" type="submit" class="raised button-submit block emby-button">
+                        <span>Save</span>
+                    </button>
+                </div>
+            </form>
+
+            <br />
+            <h2>Per-user filtering</h2>
+            <div class="fieldDescription" style="margin-bottom:1em;">
+                Each user chooses which categories to filter. A category left at <em>Off</em> plays untouched.
+                <em>Mute</em> silences the client for the length of the scene instead of seeking past it.
+            </div>
+
+            <div class="selectContainer">
+                <label class="selectLabel" for="UserSelect">User</label>
+                <select is="emby-select" id="UserSelect"></select>
+            </div>
+
+            <div class="checkboxContainer">
+                <label class="emby-checkbox-label">
+                    <input is="emby-checkbox" type="checkbox" id="UserEnabled" />
+                    <span>Filter content for this user</span>
+                </label>
+            </div>
+
+            <div id="CategoryList"></div>
+
+            <div class="inputContainer">
+                <label class="inputLabel inputLabelUnfocused" for="NewCategory">Add a category</label>
+                <input is="emby-input" type="text" id="NewCategory" placeholder="for example: bullying" />
+                <div class="fieldDescription">
+                    Use the same name that appears in the <code>type</code> field of your filter files.
+                </div>
+            </div>
+
+            <div>
+                <button is="emby-button" type="button" id="AddCategoryButton" class="raised block emby-button">
+                    <span>Add category</span>
+                </button>
+                <button is="emby-button" type="button" id="SaveUserButton" class="raised button-submit block emby-button">
+                    <span>Save user preferences</span>
+                </button>
+            </div>
+
+            <br />
+            <h2>Troubleshooting</h2>
+            <div class="inputContainer">
+                <label class="inputLabel inputLabelUnfocused" for="ItemId">Library item id</label>
+                <input is="emby-input" type="text" id="ItemId" placeholder="paste an item id from its URL" />
+                <div class="fieldDescription">
+                    Shows which filter file was found for an item, which paths were searched, and any lines that
+                    could not be read.
+                </div>
+            </div>
+            <div>
+                <button is="emby-button" type="button" id="InspectButton" class="raised block emby-button">
+                    <span>Inspect item</span>
+                </button>
+                <button is="emby-button" type="button" id="RefreshCacheButton" class="raised block emby-button">
+                    <span>Reload all filter files</span>
+                </button>
+            </div>
+            <pre id="InspectOutput" style="white-space:pre-wrap;word-break:break-word;"></pre>
+
+        </div>
+    </div>
+
+    <script type="text/javascript">
+        (function () {
+            var pluginId = '9d4bf1d9-ad64-4006-8ecb-d285d826352d';
+            var page;
+            var users = [];
+            var categories = [];
+
+            function api(method, path, body) {
+                var request = {
+                    type: method,
+                    url: ApiClient.getUrl(path),
+                    contentType: 'application/json'
+                };
+
+                if (body !== undefined) {
+                    request.data = JSON.stringify(body);
+                } else {
+                    request.dataType = 'json';
+                }
+
+                return ApiClient.ajax(request);
+            }
+
+            function currentUser() {
+                var id = page.querySelector('#UserSelect').value;
+                for (var i = 0; i < users.length; i++) {
+                    if (users[i].UserId === id) {
+                        return users[i];
+                    }
+                }
+
+                return null;
+            }
+
+            function renderCategories() {
+                var user = currentUser();
+                var chosen = {};
+                if (user) {
+                    (user.Categories || []).forEach(function (c) {
+                        chosen[c.Category] = c.Action;
+                    });
+                }
+
+                var html = categories.map(function (category) {
+                    var action = chosen[category] || 'Allow';
+                    var id = 'cat_' + category.replace(/[^a-z0-9]/gi, '_');
+                    return '<div class="selectContainer">' +
+                        '<label class="selectLabel" for="' + id + '">' + category + '</label>' +
+                        '<select is="emby-select" class="jellyfilter-category" id="' + id + '" data-category="' + category + '">' +
+                        '<option value="Allow"' + (action === 'Allow' ? ' selected' : '') + '>Off</option>' +
+                        '<option value="Skip"' + (action === 'Skip' ? ' selected' : '') + '>Skip</option>' +
+                        '<option value="Mute"' + (action === 'Mute' ? ' selected' : '') + '>Mute</option>' +
+                        '</select></div>';
+                }).join('');
+
+                page.querySelector('#CategoryList').innerHTML = html;
+                page.querySelector('#UserEnabled').checked = user ? user.Enabled : false;
+            }
+
+            function loadUsers() {
+                return Promise.all([api('GET', 'JellyFilter/Users'), api('GET', 'JellyFilter/Categories')])
+                    .then(function (results) {
+                        return Promise.all([results[0].json(), results[1].json()]);
+                    })
+                    .then(function (parsed) {
+                        users = parsed[0];
+                        categories = parsed[1];
+
+                        var select = page.querySelector('#UserSelect');
+                        var previous = select.value;
+                        select.innerHTML = users.map(function (u) {
+                            return '<option value="' + u.UserId + '">' + u.UserName + '</option>';
+                        }).join('');
+
+                        if (previous) {
+                            select.value = previous;
+                        }
+
+                        renderCategories();
+                    });
+            }
+
+            function loadConfiguration() {
+                return ApiClient.getPluginConfiguration(pluginId).then(function (config) {
+                    page.querySelector('#EnableAutoSkip').checked = config.EnableAutoSkip;
+                    page.querySelector('#PollIntervalMs').value = config.PollIntervalMs;
+                    page.querySelector('#SkipPaddingSeconds').value = config.SkipPaddingSeconds;
+                    page.querySelector('#MinimumSceneSeconds').value = config.MinimumSceneSeconds;
+                    page.querySelector('#ShowSkipNotification').checked = config.ShowSkipNotification;
+                    page.querySelector('#SkipNotificationFormat').value = config.SkipNotificationFormat || '';
+                    page.querySelector('#FilterFileNamePatterns').value = (config.FilterFileNamePatterns || []).join('\n');
+                    page.querySelector('#ExternalFilterDirectory').value = config.ExternalFilterDirectory || '';
+                    page.querySelector('#EnableMediaSegments').checked = config.EnableMediaSegments;
+                    page.querySelector('#PublishedSegmentType').value = config.PublishedSegmentType;
+                });
+            }
+
+            function saveConfiguration() {
+                // Re-fetch rather than reusing the copy loaded at page open, so that user
+                // preferences saved since then are not written back stale.
+                return ApiClient.getPluginConfiguration(pluginId).then(function (config) {
+                    config.EnableAutoSkip = page.querySelector('#EnableAutoSkip').checked;
+                    config.PollIntervalMs = parseInt(page.querySelector('#PollIntervalMs').value, 10);
+                    config.SkipPaddingSeconds = parseFloat(page.querySelector('#SkipPaddingSeconds').value);
+                    config.MinimumSceneSeconds = parseFloat(page.querySelector('#MinimumSceneSeconds').value);
+                    config.ShowSkipNotification = page.querySelector('#ShowSkipNotification').checked;
+                    config.SkipNotificationFormat = page.querySelector('#SkipNotificationFormat').value;
+                    config.FilterFileNamePatterns = page.querySelector('#FilterFileNamePatterns').value
+                        .split('\n')
+                        .map(function (line) { return line.trim(); })
+                        .filter(function (line) { return line.length > 0; });
+                    config.ExternalFilterDirectory = page.querySelector('#ExternalFilterDirectory').value;
+                    config.EnableMediaSegments = page.querySelector('#EnableMediaSegments').checked;
+                    config.PublishedSegmentType = page.querySelector('#PublishedSegmentType').value;
+
+                    return ApiClient.updatePluginConfiguration(pluginId, config);
+                }).then(Dashboard.processPluginConfigurationUpdateResult);
+            }
+
+            function saveUser() {
+                var user = currentUser();
+                if (!user) {
+                    return;
+                }
+
+                var chosen = [];
+                page.querySelectorAll('.jellyfilter-category').forEach(function (select) {
+                    if (select.value !== 'Allow') {
+                        chosen.push({ Category: select.dataset.category, Action: select.value });
+                    }
+                });
+
+                user.Enabled = page.querySelector('#UserEnabled').checked;
+                user.Categories = chosen;
+
+                Dashboard.showLoadingMsg();
+                api('POST', 'JellyFilter/Users/' + user.UserId + '/Preferences', user)
+                    .then(function () {
+                        Dashboard.hideLoadingMsg();
+                        Dashboard.alert('Saved preferences for ' + user.UserName + '.');
+                    })
+                    .catch(function () {
+                        Dashboard.hideLoadingMsg();
+                        Dashboard.alert('Could not save preferences.');
+                    });
+            }
+
+            function addCategory() {
+                var input = page.querySelector('#NewCategory');
+                var value = input.value.trim().toLowerCase();
+                if (!value || categories.indexOf(value) !== -1) {
+                    input.value = '';
+                    return;
+                }
+
+                ApiClient.getPluginConfiguration(pluginId).then(function (config) {
+                    config.KnownCategories = (config.KnownCategories || []).concat([value]);
+                    return ApiClient.updatePluginConfiguration(pluginId, config);
+                }).then(function () {
+                    input.value = '';
+                    return loadUsers();
+                });
+            }
+
+            function inspectItem() {
+                var itemId = page.querySelector('#ItemId').value.trim();
+                var output = page.querySelector('#InspectOutput');
+                if (!itemId) {
+                    output.textContent = '';
+                    return;
+                }
+
+                api('GET', 'JellyFilter/Items/' + itemId + '/Filter')
+                    .then(function (response) { return response.json(); })
+                    .then(function (result) {
+                        output.textContent = JSON.stringify(result, null, 2);
+                    })
+                    .catch(function () {
+                        output.textContent = 'No library item with that id.';
+                    });
+            }
+
+            page = document.querySelector('#JellyFilterConfigPage');
+
+            page.querySelector('#JellyFilterGlobalForm').addEventListener('submit', function (e) {
+                e.preventDefault();
+                Dashboard.showLoadingMsg();
+                saveConfiguration().then(Dashboard.hideLoadingMsg);
+                return false;
+            });
+
+            page.querySelector('#UserSelect').addEventListener('change', renderCategories);
+            page.querySelector('#SaveUserButton').addEventListener('click', saveUser);
+            page.querySelector('#AddCategoryButton').addEventListener('click', addCategory);
+            page.querySelector('#InspectButton').addEventListener('click', inspectItem);
+            page.querySelector('#RefreshCacheButton').addEventListener('click', function () {
+                api('POST', 'JellyFilter/Cache/Refresh', {}).then(function () {
+                    Dashboard.alert('Filter files will be re-read.');
+                });
+            });
+
+            page.addEventListener('pageshow', function () {
+                Dashboard.showLoadingMsg();
+                Promise.all([loadConfiguration(), loadUsers()])
+                    .then(Dashboard.hideLoadingMsg)
+                    .catch(Dashboard.hideLoadingMsg);
+            });
+        })();
+    </script>
+</div>
+</body>
+</html>
